@@ -17,11 +17,17 @@ export interface WithdrawalResponse {
   status: string;
 }
 
+interface Transaction {
+  id: string;
+  status: string;
+  [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+}
+
 export class MEXCClient {
-  private exchange: ccxt.mexc;
+  private exchange: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
   constructor(apiKey: string, apiSecret: string) {
-    this.exchange = new ccxt.mexc({
+    this.exchange = new (ccxt as any).mexc({ // eslint-disable-line @typescript-eslint/no-explicit-any
       apiKey,
       secret: apiSecret,
       enableRateLimit: true,
@@ -47,8 +53,9 @@ export class MEXCClient {
         const coinData = currencies[coin];
         if (coinData.networks) {
           for (const [, networkInfo] of Object.entries(coinData.networks)) {
-            if (!network || networkInfo.network === network) {
-              return parseFloat(networkInfo.fee || '0');
+            const typedNetworkInfo = networkInfo as { network?: string; fee?: string | number };
+            if (!network || typedNetworkInfo.network === network) {
+              return parseFloat(typedNetworkInfo.fee?.toString() || '0');
             }
           }
         }
@@ -59,7 +66,7 @@ export class MEXCClient {
     }
   }
 
-  async withdrawCrypto(coin: string, amount: number, address: string, network?: string): Promise<ccxt.Transaction> {
+  async withdrawCrypto(coin: string, amount: number, address: string, network?: string): Promise<Transaction> {
     try {
       await this.exchange.loadMarkets();
       const params: Record<string, string> = {};
@@ -90,10 +97,10 @@ export class MEXCClient {
     return statusMapping[ccxtStatus.toLowerCase()] || 'processing';
   }
 
-  async fetchWithdrawalStatus(withdrawalId: string): Promise<{ status: WithdrawalStatus; details: ccxt.Transaction }> {
+  async fetchWithdrawalStatus(withdrawalId: string): Promise<{ status: WithdrawalStatus; details: Transaction }> {
     try {
       const withdrawals = await this.exchange.fetchWithdrawals();
-      const withdrawal = withdrawals.find(w => w.id === withdrawalId);
+      const withdrawal = withdrawals.find((w: Transaction) => w.id === withdrawalId);
       
       if (!withdrawal) {
         throw new Error('Withdrawal not found');

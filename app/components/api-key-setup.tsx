@@ -147,7 +147,7 @@ export function ApiKeySetup({ onCredentialsSet }: ApiKeySetupProps) {
 
           <Button
             type="submit"
-            disabled={isSubmitting || testing || (testResult && !testResult.valid)}
+            disabled={isSubmitting || testing || (testResult ? !testResult.valid : false)}
             className="flex-1"
           >
             {isSubmitting ? (

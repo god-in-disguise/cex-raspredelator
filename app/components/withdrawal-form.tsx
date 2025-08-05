@@ -82,7 +82,7 @@ export function WithdrawalForm({
                   min="0"
                   value={row.amount || ''}
                   onChange={(e) => onAmountChange(row.id, parseFloat(e.target.value) || 0)}
-                  disabled={loading || row.status}
+                  disabled={loading || !!row.status}
                   className="text-sm"
                 />
               </div>
