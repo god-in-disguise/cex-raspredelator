@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Loader2, AlertTriangle, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { WithdrawalRow } from './withdrawal-interface';
 
@@ -39,7 +38,7 @@ const StatusIcon = ({ status }: { status?: WithdrawalRow['status'] }) => {
 export function WithdrawalForm({
   rows,
   coin,
-  network,
+  network, // eslint-disable-line @typescript-eslint/no-unused-vars
   balance,
   fee,
   onAmountChange,
@@ -68,7 +67,7 @@ export function WithdrawalForm({
             <div className="col-span-1">Status</div>
           </div>
           
-          {rows.map((row, index) => (
+          {rows.map((row) => (
             <div key={row.id} className="grid grid-cols-12 gap-4 items-center">
               <div className="col-span-6">
                 <div className="text-sm font-mono break-all">

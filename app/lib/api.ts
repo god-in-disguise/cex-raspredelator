@@ -25,7 +25,7 @@ export interface WithdrawalResponse {
 
 export interface WithdrawalStatusResponse {
   status: 'pending' | 'processing' | 'completed' | 'failed';
-  details: any;
+  details: Record<string, unknown>;
 }
 
 export interface DepositAddressResponse {

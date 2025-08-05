@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { MEXCClient } from '@/lib/mexc-client';
-import { CredentialStorage } from '@/lib/storage';
 
 export async function GET(
   request: NextRequest,

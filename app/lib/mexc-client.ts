@@ -46,7 +46,7 @@ export class MEXCClient {
       if (coin in currencies) {
         const coinData = currencies[coin];
         if (coinData.networks) {
-          for (const [networkKey, networkInfo] of Object.entries(coinData.networks)) {
+          for (const [, networkInfo] of Object.entries(coinData.networks)) {
             if (!network || networkInfo.network === network) {
               return parseFloat(networkInfo.fee || '0');
             }
@@ -59,10 +59,10 @@ export class MEXCClient {
     }
   }
 
-  async withdrawCrypto(coin: string, amount: number, address: string, network?: string): Promise<any> {
+  async withdrawCrypto(coin: string, amount: number, address: string, network?: string): Promise<ccxt.Transaction> {
     try {
       await this.exchange.loadMarkets();
-      const params: any = {};
+      const params: Record<string, string> = {};
       if (network) {
         params.network = network;
       }
@@ -90,7 +90,7 @@ export class MEXCClient {
     return statusMapping[ccxtStatus.toLowerCase()] || 'processing';
   }
 
-  async fetchWithdrawalStatus(withdrawalId: string): Promise<{ status: WithdrawalStatus; details: any }> {
+  async fetchWithdrawalStatus(withdrawalId: string): Promise<{ status: WithdrawalStatus; details: ccxt.Transaction }> {
     try {
       const withdrawals = await this.exchange.fetchWithdrawals();
       const withdrawal = withdrawals.find(w => w.id === withdrawalId);
