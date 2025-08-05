@@ -3,9 +3,11 @@ import { MEXCClient } from '@/lib/mexc-client';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { coin: string } }
+  { params }: { params: Promise<{ coin: string }> }
 ) {
   try {
+    const { coin } = await params;
+    
     // Get API credentials from headers (sent from client)
     const apiKey = request.headers.get('x-api-key');
     const apiSecret = request.headers.get('x-api-secret');
@@ -18,7 +20,7 @@ export async function GET(
     }
 
     const mexcClient = new MEXCClient(apiKey, apiSecret);
-    const balance = await mexcClient.getBalance(params.coin);
+    const balance = await mexcClient.getBalance(coin);
 
     return NextResponse.json({ balance });
   } catch (error) {

@@ -3,9 +3,11 @@ import { MEXCClient } from '@/lib/mexc-client';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    
     const apiKey = request.headers.get('x-api-key');
     const apiSecret = request.headers.get('x-api-secret');
 
@@ -17,7 +19,7 @@ export async function GET(
     }
 
     const mexcClient = new MEXCClient(apiKey, apiSecret);
-    const result = await mexcClient.fetchWithdrawalStatus(params.id);
+    const result = await mexcClient.fetchWithdrawalStatus(id);
 
     return NextResponse.json(result);
   } catch (error) {
