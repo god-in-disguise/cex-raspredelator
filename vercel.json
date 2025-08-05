@@ -1,0 +1,15 @@
+{
+  "name": "mexc-withdrawal-tool",
+  "version": 2,
+  "build": {
+    "env": {
+      "ENABLE_EXPERIMENTAL_COREPACK": "1"
+    }
+  },
+  "functions": {
+    "app/api/**": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
+} 
