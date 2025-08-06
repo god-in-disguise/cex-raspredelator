@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { v4 as uuidv4 } from 'uuid';
 import { useBalanceAndFee } from '@/hooks/use-balance-and-fee';
 import { useWithdrawal } from '@/hooks/use-withdrawal';
+import { validateCryptoAddress } from '@/lib/utils';
 
 export interface WithdrawalRow {
   id: string;
@@ -17,13 +18,16 @@ export interface WithdrawalRow {
   amount: number;
   status?: 'pending' | 'processing' | 'completed' | 'failed';
   withdrawalId?: string;
+  isValidAddress?: boolean;
+  addressError?: string;
 }
 
 export function WithdrawalInterface() {
-  const [coin, setCoin] = useState('SOL');
-  const [network, setNetwork] = useState('SOL');
+  const [coin, setCoin] = useState('ETH');
+  const [network, setNetwork] = useState('ETH');
   const [addresses, setAddresses] = useState('');
   const [rows, setRows] = useState<WithdrawalRow[]>([]);
+  const [addressValidationErrors, setAddressValidationErrors] = useState<string[]>([]);
 
   const { balance, fee, loading: balanceLoading, error: balanceError, fetchBalance } = useBalanceAndFee(coin, network);
   const { loading: withdrawalLoading, startWithdrawal } = useWithdrawal();
@@ -35,14 +39,26 @@ export function WithdrawalInterface() {
       .map((addr) => addr.trim())
       .filter(Boolean);
     
-    setRows(
-      addressList.map((address) => ({
+    // Validate addresses and create rows with validation results
+    const newRows = addressList.map((address) => {
+      const validation = validateCryptoAddress(address, coin);
+      return {
         id: uuidv4(),
         address,
         amount: 0,
         status: undefined,
-      }))
-    );
+        isValidAddress: validation.isValid,
+        addressError: validation.error,
+      };
+    });
+
+    // Collect validation errors for display
+    const errors = newRows
+      .filter(row => !row.isValidAddress)
+      .map(row => `${row.address}: ${row.addressError}`);
+    
+    setAddressValidationErrors(errors);
+    setRows(newRows);
   };
 
   const handleAmountChange = (id: string, amount: number) => {
@@ -51,11 +67,12 @@ export function WithdrawalInterface() {
     );
   };
 
-  const validWithdrawals = rows.filter((row) => row.amount > 0);
+  const validWithdrawals = rows.filter((row) => row.amount > 0 && row.isValidAddress);
   const hasValidWithdrawals = validWithdrawals.length > 0;
   const totalAmount = validWithdrawals.reduce((sum, row) => sum + row.amount, 0);
   const isExceedingBalance = totalAmount > (balance || 0);
-  const isValid = hasValidWithdrawals && !isExceedingBalance;
+  const hasAddressErrors = addressValidationErrors.length > 0;
+  const isValid = hasValidWithdrawals && !isExceedingBalance && !hasAddressErrors;
 
   const handleWithdraw = async () => {
     const updatedRows = await startWithdrawal(validWithdrawals, coin, network);
@@ -65,6 +82,7 @@ export function WithdrawalInterface() {
   const handleClearAll = () => {
     setAddresses('');
     setRows([]);
+    setAddressValidationErrors([]);
   };
 
   return (
@@ -104,19 +122,42 @@ export function WithdrawalInterface() {
           <div className="space-y-2">
             <Label htmlFor="addresses">
               Enter withdrawal addresses (one per line)
+              {coin === 'ETH' && (
+                <span className="block text-sm text-gray-500 mt-1">
+                  ETH addresses must start with 0x and be 42 characters long
+                </span>
+              )}
             </Label>
             <textarea
               id="addresses"
               className="w-full min-h-32 p-3 border rounded-md resize-vertical"
-              placeholder="Enter wallet addresses, one per line..."
+              placeholder={coin === 'ETH' 
+                ? "0x742d35Cc6634C0532925a3b8D4323BA\n0x8d12A197cB00D4747a1fe03395095c..."
+                : "Enter wallet addresses, one per line..."
+              }
               value={addresses}
               onChange={(e) => handleAddressesChange(e.target.value)}
             />
           </div>
+
+          {/* Address Validation Errors */}
+          {hasAddressErrors && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <h4 className="font-medium text-red-800 mb-2">Address Validation Errors:</h4>
+              <ul className="text-sm text-red-700 space-y-1">
+                {addressValidationErrors.map((error, index) => (
+                  <li key={index} className="break-all">• {error}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           
           {rows.length > 0 && (
             <div className="flex justify-between items-center text-sm text-gray-600">
-              <span>{rows.length} addresses detected</span>
+              <span>
+                {rows.length} addresses detected 
+                ({validWithdrawals.length} valid)
+              </span>
               <Button variant="outline" size="sm" onClick={handleClearAll}>
                 Clear All
               </Button>

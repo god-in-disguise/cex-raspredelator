@@ -70,8 +70,17 @@ export function WithdrawalForm({
           {rows.map((row) => (
             <div key={row.id} className="grid grid-cols-12 gap-4 items-center">
               <div className="col-span-6">
-                <div className="text-sm font-mono break-all">
+                <div className={`text-sm font-mono break-all p-2 rounded ${
+                  row.isValidAddress === false 
+                    ? 'bg-red-50 border border-red-200 text-red-700' 
+                    : 'bg-gray-50'
+                }`}>
                   {row.address.substring(0, 20)}...{row.address.substring(row.address.length - 10)}
+                  {row.isValidAddress === false && (
+                    <div className="text-xs mt-1 text-red-600">
+                      ⚠ Invalid address format
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="col-span-3">
@@ -82,17 +91,22 @@ export function WithdrawalForm({
                   min="0"
                   value={row.amount || ''}
                   onChange={(e) => onAmountChange(row.id, parseFloat(e.target.value) || 0)}
-                  disabled={loading || !!row.status}
-                  className="text-sm"
+                  disabled={loading || !!row.status || row.isValidAddress === false}
+                  className={`text-sm ${
+                    row.isValidAddress === false ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 />
               </div>
               <div className="col-span-2">
                 <div className="text-sm text-gray-600">
-                  {row.amount > 0 ? fee.toFixed(6) : '0.000000'}
+                  {row.amount > 0 && row.isValidAddress !== false ? fee.toFixed(6) : '0.000000'}
                 </div>
               </div>
               <div className="col-span-1">
                 <StatusIcon status={row.status} />
+                {row.isValidAddress === false && (
+                  <div className="text-red-500 text-xs mt-1">❌</div>
+                )}
               </div>
             </div>
           ))}
